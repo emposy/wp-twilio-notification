@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Twilio Notification for CF7
-Plugin URI: https://github.com/masayapy/twilio-notification
+Plugin URI: https://github.com/emposy/wp-twilio-notification
 Description: Contact Form 7からTwilioで電話とSMSを送信
 Version: 1.0.0
 Author: Emposy, inc.
