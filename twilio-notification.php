@@ -3,11 +3,13 @@
 Plugin Name: Twilio Notification for CF7
 Plugin URI: https://github.com/emposy/wp-twilio-notification
 Description: Contact Form 7からTwilioを使って電話とSMSで通知を送信
-Version: 1.2.0
+Version: 1.0.1
 Author: masasgr
 Text Domain: twilio-notification
 Requires at least: 5.0
 Requires PHP: 7.4
+GitHub Plugin URI: emposy/wp-twilio-notification
+Primary Branch: main
 */
 
 if (!defined('ABSPATH')) exit;
@@ -253,3 +255,98 @@ add_action('plugins_loaded', function() {
     $plugin = new TwilioNotificationCF7();
     $plugin->init();
 });
+
+// GitHub自動更新
+class TwilioGitHubUpdater {
+    private $file;
+    private $plugin;
+    private $basename;
+    private $active;
+    private $github_response;
+
+    public function __construct($file) {
+        $this->file = $file;
+        $this->plugin = get_plugin_data($this->file);
+        $this->basename = plugin_basename($this->file);
+        $this->active = is_plugin_active($this->basename);
+
+        add_filter('pre_set_site_transient_update_plugins', [$this, 'check_update']);
+        add_filter('plugins_api', [$this, 'plugin_info'], 20, 3);
+        add_filter('upgrader_post_install', [$this, 'after_install'], 10, 3);
+    }
+
+    private function get_repository_info() {
+        if (!empty($this->github_response)) return;
+
+        $url = 'https://api.github.com/repos/emposy/wp-twilio-notification/releases/latest';
+        $response = wp_remote_get($url);
+
+        if (is_wp_error($response)) return;
+
+        $this->github_response = json_decode(wp_remote_retrieve_body($response));
+    }
+
+    public function check_update($transient) {
+        if (empty($transient->checked)) return $transient;
+
+        $this->get_repository_info();
+        if (!$this->github_response) return $transient;
+
+        $do_update = version_compare($this->github_response->tag_name, $this->plugin['Version'], '>');
+
+        if ($do_update) {
+            $package = $this->github_response->assets[0]->browser_download_url ?? '';
+            
+            $plugin = [
+                'slug' => current(explode('/', $this->basename)),
+                'new_version' => $this->github_response->tag_name,
+                'url' => $this->plugin['PluginURI'],
+                'package' => $package,
+            ];
+            $transient->response[$this->basename] = (object) $plugin;
+        }
+
+        return $transient;
+    }
+
+    public function plugin_info($false, $action, $response) {
+        if ($action !== 'plugin_information') return $false;
+        if ($response->slug !== current(explode('/', $this->basename))) return $false;
+
+        $this->get_repository_info();
+        if (!$this->github_response) return $false;
+
+        $plugin = [
+            'name' => $this->plugin['Name'],
+            'slug' => $response->slug,
+            'version' => $this->github_response->tag_name,
+            'author' => $this->plugin['AuthorName'],
+            'homepage' => $this->plugin['PluginURI'],
+            'requires' => $this->plugin['RequiresWP'],
+            'requires_php' => $this->plugin['RequiresPHP'],
+            'download_link' => $this->github_response->assets[0]->browser_download_url ?? '',
+            'sections' => [
+                'description' => $this->plugin['Description'],
+                'changelog' => $this->github_response->body,
+            ],
+        ];
+
+        return (object) $plugin;
+    }
+
+    public function after_install($response, $hook_extra, $result) {
+        global $wp_filesystem;
+
+        $install_directory = plugin_dir_path($this->file);
+        $wp_filesystem->move($result['destination'], $install_directory);
+        $result['destination'] = $install_directory;
+
+        if ($this->active) {
+            activate_plugin($this->basename);
+        }
+
+        return $result;
+    }
+}
+
+new TwilioGitHubUpdater(__FILE__);
