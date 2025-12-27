@@ -4,7 +4,7 @@ Plugin Name: Twilio Notification for CF7
 Plugin URI: https://github.com/masayapy/twilio-notification
 Description: Contact Form 7からTwilioで電話とSMSを送信
 Version: 1.0.0
-Author: masasgr
+Author: Emposy, inc.
 Requires at least: 5.0
 Requires PHP: 7.4
 */
