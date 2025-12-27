@@ -1,0 +1,9 @@
+{
+  "name": "masayapy/twilio-notification",
+  "description": "Contact Form 7 integration with Twilio",
+  "type": "wordpress-plugin",
+  "require": {
+      "php": ">=7.4",
+      "twilio/sdk": "^8.3"
+  }
+}
