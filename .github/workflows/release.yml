@@ -1,36 +1,12 @@
-name: Create Release ZIP
+- name: Create ZIP
+  run: |
+    cd ..
+    zip -r wp-twilio-notification.zip wp-twilio-notification \
+      -x "wp-twilio-notification/.git/*" \
+      -x "wp-twilio-notification/.github/*" \
+      -x "wp-twilio-notification/.gitignore"
 
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '7.4'
-    
-    - name: Install dependencies
-      run: composer install --no-dev --optimize-autoloader
-    
-    - name: Create ZIP
-      run: |
-        cd ..
-        zip -r twilio-notification.zip twilio-notification \
-          -x "twilio-notification/.git/*" \
-          -x "twilio-notification/.github/*" \
-          -x "twilio-notification/.gitignore"
-    
-    - name: Upload Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ../twilio-notification.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+- name: Upload Release
+  uses: softprops/action-gh-release@v1
+  with:
+    files: ../wp-twilio-notification.zip
