@@ -3,7 +3,7 @@
 Plugin Name: Twilio Notification for CF7
 Plugin URI: https://github.com/emposy/wp-twilio-notification
 Description: Contact Form 7からTwilioを使って電話とSMSで通知を送信
-Version: 1.0.1
+Version: 1.0.2
 Author: masasgr
 Text Domain: twilio-notification
 Requires at least: 5.0
@@ -34,35 +34,37 @@ class TwilioNotificationCF7 {
     
     public function enqueue_scripts($hook) {
         if ($hook !== 'settings_page_twilio-notification') return;
-        ?>
-        <style>
+        
+        wp_enqueue_script('jquery');
+        
+        wp_add_inline_style('wp-admin', '
             .nav-tab-wrapper { margin-bottom: 20px; }
             .twilio-tab-content { display: none; }
             .twilio-tab-content.active { display: block; }
             .twiml-option { display: none; }
             .twiml-option.active { display: block; margin-top: 10px; }
-        </style>
-        <script>
+        ');
+        
+        wp_add_inline_script('jquery', '
         jQuery(document).ready(function($) {
-            $('.nav-tab').click(function(e) {
+            $(".nav-tab").click(function(e) {
                 e.preventDefault();
-                $('.nav-tab').removeClass('nav-tab-active');
-                $('.twilio-tab-content').removeClass('active');
-                $(this).addClass('nav-tab-active');
-                $($(this).attr('href')).addClass('active');
+                $(".nav-tab").removeClass("nav-tab-active");
+                $(".twilio-tab-content").removeClass("active");
+                $(this).addClass("nav-tab-active");
+                $($(this).attr("href")).addClass("active");
             });
             
-            $('input[name="<?php echo $this->option_name; ?>[twiml_type]"]').change(function() {
-                $('.twiml-option').removeClass('active');
-                if ($(this).val() === 'url') {
-                    $('#twiml-url-option').addClass('active');
+            $("input[name=\"' . $this->option_name . '[twiml_type]\"]").change(function() {
+                $(".twiml-option").removeClass("active");
+                if ($(this).val() === "url") {
+                    $("#twiml-url-option").addClass("active");
                 } else {
-                    $('#twiml-text-option').addClass('active');
+                    $("#twiml-text-option").addClass("active");
                 }
-            }).trigger('change');
+            }).trigger("change");
         });
-        </script>
-        <?php
+        ');
     }
     
     public function register_settings() {
